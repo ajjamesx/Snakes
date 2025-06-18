@@ -1,10 +1,14 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+const scoreDisplay = document.getElementById("score");
 
-const box = 20; // Size of the snake and food
+const box = 20;
 let snake = [{ x: 200, y: 200 }];
 let food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
 let direction = "RIGHT";
+let score = 0;
+let level = 1;
+let speed = 200;
 
 document.addEventListener("keydown", (event) => {
     if (event.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
@@ -22,15 +26,22 @@ function updateGame() {
     if (direction === "RIGHT") head.x += box;
 
     if (head.x === food.x && head.y === food.y) {
+        score += 10;
         food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
+
+        if (score % 50 === 0) {
+            level += 1;
+            speed *= 0.9; // Increase difficulty
+            clearInterval(gameLoopInterval);
+            gameLoopInterval = setInterval(gameLoop, speed);
+        }
     } else {
         snake.pop();
     }
 
     if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || snake.some(segment => segment.x === head.x && segment.y === head.y)) {
-        alert("Game Over!");
-        snake = [{ x: 200, y: 200 }];
-        direction = "RIGHT";
+        alert(`Game Over! Final Score: ${score}`);
+        resetGame();
     }
 
     snake.unshift(head);
@@ -44,6 +55,18 @@ function drawGame() {
     
     ctx.fillStyle = "green";
     snake.forEach(segment => ctx.fillRect(segment.x, segment.y, box, box));
+
+    scoreDisplay.textContent = `Score: ${score} | Level: ${level}`;
+}
+
+function resetGame() {
+    snake = [{ x: 200, y: 200 }];
+    direction = "RIGHT";
+    score = 0;
+    level = 1;
+    speed = 200;
+    clearInterval(gameLoopInterval);
+    gameLoopInterval = setInterval(gameLoop, speed);
 }
 
 function gameLoop() {
@@ -51,4 +74,4 @@ function gameLoop() {
     drawGame();
 }
 
-setInterval(gameLoop, 100);
+let gameLoopInterval = setInterval(gameLoop, speed);
